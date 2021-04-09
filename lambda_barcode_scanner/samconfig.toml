@@ -1,0 +1,10 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "lambda-barcode-scanner"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-8o1yc75ew3ih"
+s3_prefix = "lambda-barcode-scanner"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
