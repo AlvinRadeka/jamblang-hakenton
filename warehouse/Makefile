@@ -17,6 +17,7 @@ build-run: build run
 clean-build-run: clean build run
 
 .PHONY: publish-ecr
+publish-ecr:
 	@docker build -t warehouse:latest .
 	@docker tag warehouse:latest 689895324334.dkr.ecr.us-east-1.amazonaws.com/warehouse
 	@docker push 689895324334.dkr.ecr.us-east-1.amazonaws.com/warehouse
