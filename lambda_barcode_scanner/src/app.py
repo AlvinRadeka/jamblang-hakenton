@@ -87,11 +87,16 @@ def lambda_handler(event, context):
     # Scan with recognition.
     try:
         rekognition = boto3.client('rekognition')
-        result = rekognition.detect_text(Image={'S3Object': {'Bucket': bucket_name, 'Name': file_path }})
-        text_detections = result['TextDetections']
+        rekognition_result = rekognition.detect_text(Image={'S3Object': {'Bucket': bucket_name, 'Name': file_path }})
+        text_detections = rekognition_result['TextDetections']
+
+        result = []
+        for text in text_detections:
+            if 'Type' in text and text['Type'] == 'WORD':
+                result.append(text)
+
     except Exception as err:
         print(err)
         return response_error(400, 'failed scanning barcode')
 
-
-    return response_success(text_detections)
+    return response_success(result)
