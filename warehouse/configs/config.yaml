@@ -1,0 +1,11 @@
+Logger:
+  Level: 'debug'
+HTTP:
+  Host: 0.0.0.0
+  Port: 5300
+SQL:
+  Host: 'jamblang-prod-rds.cqmrjzdzanm0.us-east-1.rds.amazonaws.com'
+  Port: 3306
+  Username: 'jamblang'
+  Password: 'bBU4SBPWsagX8C8tDT8v2Dp7'
+  DBName: 'warehouse_db'
