@@ -14,7 +14,7 @@ func (wr *binRepository) Get(binID int64) (domain.Bin, error) {
 
 	query, args, err := squirrel.Select(
 		"id",
-		"warehouse_id",
+		"wh_code",
 		"name",
 		"latitude",
 		"longitude",
@@ -57,7 +57,7 @@ func (wr *binRepository) GetByWarehouseID(warehouseID int64) ([]domain.Bin, erro
 
 	query, args, err := squirrel.Select(
 		"id",
-		"warehouse_id",
+		"wh_code",
 		"name",
 		"latitude",
 		"longitude",

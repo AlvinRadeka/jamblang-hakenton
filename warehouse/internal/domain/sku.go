@@ -13,6 +13,9 @@ type SKU struct {
 	ID        int64
 	SKU       string
 	Name      string
+	WHCode    string
+	BinCode   string
+	ZoneID    string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -22,6 +25,9 @@ func (sk SKU) SKUResponse() SKUResponse {
 		ID:        sk.ID,
 		SKU:       sk.SKU,
 		Name:      sk.Name,
+		WHCode:    sk.WHCode,
+		BinCode:   sk.BinCode,
+		ZoneID:    sk.ZoneID,
 		CreatedAt: sk.CreatedAt,
 		UpdatedAt: sk.UpdatedAt,
 	}
@@ -31,13 +37,19 @@ type SKUResponse struct {
 	ID        int64     `json:"id"`
 	SKU       string    `json:"sku"`
 	Name      string    `json:"name"`
+	WHCode    string    `json:"wh_code"`
+	BinCode   string    `json:"bin_code"`
+	ZoneID    string    `json:"zone_id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type SKUDataParameter struct {
-	SKU  string `json:"sku" validate:"required"`
-	Name string `json:"name" validate:"required"`
+	SKU     string `json:"sku" validate:"required"`
+	WHCode  string `json:"wh_code" validate:"required"`
+	BinCode string `json:"bin_code" validate:"required"`
+	ZoneID  string `json:"zone_id" validate:"required"`
+	Name    string `json:"name" validate:"required"`
 }
 
 type SKUQueryParameter struct {
@@ -49,7 +61,7 @@ func (wh *SKUQueryParameter) Parse(uv url.Values) error {
 	if page := uv.Get("page"); len(page) > 0 {
 		i, err := strconv.ParseInt(page, 10, 64)
 		if err != nil {
-			return errors.New("Invalid Page Parameter")
+			return errors.New("invalid Page Parameter")
 		}
 		wh.Page = i
 	}
@@ -57,15 +69,13 @@ func (wh *SKUQueryParameter) Parse(uv url.Values) error {
 	if limit := uv.Get("limit"); len(limit) > 0 {
 		i, err := strconv.ParseInt(limit, 10, 64)
 		if err != nil {
-			return errors.New("Invalid Limit Parameter")
+			return errors.New("invalid Limit Parameter")
 		}
 		wh.Limit = i
 	}
 
 	if skus := uv["sku"]; len(skus) > 0 {
-		for _, _sku := range skus {
-			wh.SKU = append(wh.SKU, _sku)
-		}
+		wh.SKU = append(wh.SKU, skus...)
 	}
 
 	return nil

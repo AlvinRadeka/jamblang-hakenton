@@ -15,6 +15,9 @@ func (wr *skuRepository) Get(skuID int64) (domain.SKU, error) {
 	query, args, err := squirrel.Select(
 		"id",
 		"sku",
+		"wh_code",
+		"bin_code",
+		"zone_id",
 		"name",
 		"created_at",
 		"updated_at",
@@ -35,6 +38,9 @@ func (wr *skuRepository) Get(skuID int64) (domain.SKU, error) {
 	err = row.Scan(
 		&skuData.ID,
 		&skuData.SKU,
+		&skuData.WHCode,
+		&skuData.BinCode,
+		&skuData.ZoneID,
 		&skuData.Name,
 		&skuData.CreatedAt,
 		&skuData.UpdatedAt,
@@ -54,6 +60,9 @@ func (wr *skuRepository) Select(params domain.SKUQueryParameter) ([]domain.SKU, 
 	selector := squirrel.Select(
 		"id",
 		"sku",
+		"wh_code",
+		"bin_code",
+		"zone_id",
 		"name",
 		"created_at",
 		"updated_at",
@@ -76,6 +85,9 @@ func (wr *skuRepository) Select(params domain.SKUQueryParameter) ([]domain.SKU, 
 		if err := rows.Scan(
 			&skuData.ID,
 			&skuData.SKU,
+			&skuData.WHCode,
+			&skuData.BinCode,
+			&skuData.ZoneID,
 			&skuData.Name,
 			&skuData.CreatedAt,
 			&skuData.UpdatedAt,
@@ -97,11 +109,17 @@ func (wr *skuRepository) Create(data domain.SKUDataParameter) (domain.SKU, error
 
 	query, args, err := squirrel.Insert("skus").Columns(
 		"sku",
+		"wh_code",
+		"bin_code",
+		"zone_id",
 		"name",
 		"created_at",
 		"updated_at",
 	).Values(
 		data.SKU,
+		data.WHCode,
+		data.BinCode,
+		data.ZoneID,
 		data.Name,
 		t, t,
 	).ToSql()
@@ -141,6 +159,9 @@ func (wr *skuRepository) Update(skuID int64, data domain.SKUDataParameter) (doma
 	query, args, err := squirrel.Update("skus").
 		Set("name", data.Name).
 		Set("sku", data.SKU).
+		Set("wh_code", data.WHCode).
+		Set("bin_code", data.BinCode).
+		Set("zone_id", data.ZoneID).
 		Set("updated_at", time.Now()).
 		Where(squirrel.Eq{"id": skuID}).
 		ToSql()
