@@ -112,6 +112,7 @@ func (wh BinQueryParameter) BuildSQLQuery(sb squirrel.SelectBuilder) squirrel.Se
 
 type BinRepository interface {
 	Get(binID int64) (Bin, error)
+	GetByWarehouseID(warehouseID int64) ([]Bin, error)
 	Select(params BinQueryParameter) ([]Bin, error)
 	Create(data BinDataParameter) (Bin, error)
 	Update(binID int64, data BinDataParameter) (Bin, error)

@@ -8,18 +8,21 @@ import (
 type warehouseUsecase struct {
 	logger    *logrus.Logger
 	warehouse domain.WarehouseRepository
+	bin       domain.BinRepository
 }
 
-func NewUsecase(logger *logrus.Logger, warehouse domain.WarehouseRepository) domain.WarehouseUsecase {
+func NewUsecase(logger *logrus.Logger, warehouse domain.WarehouseRepository, bin domain.BinRepository) domain.WarehouseUsecase {
 	return &warehouseUsecase{
 		logger:    logger,
 		warehouse: warehouse,
+		bin:       bin,
 	}
 }
 
 func (uc *warehouseUsecase) Get(warehouseID int64) (domain.WarehouseResponse, error) {
 	var (
 		warehouseResponse domain.WarehouseResponse
+		binsResponse      []domain.BinResponse
 	)
 
 	warehouseData, err := uc.warehouse.Get(warehouseID)
@@ -27,7 +30,18 @@ func (uc *warehouseUsecase) Get(warehouseID int64) (domain.WarehouseResponse, er
 		return warehouseResponse, err
 	}
 
+	// Fetch Bins Data
+	binsData, err := uc.bin.GetByWarehouseID(warehouseID)
+	if err != nil {
+		return warehouseResponse, err
+	}
+
+	for _, bin := range binsData {
+		binsResponse = append(binsResponse, bin.BinResponse())
+	}
+
 	warehouseResponse = warehouseData.WarehouseResponse()
+	warehouseResponse.Bins = binsResponse
 	return warehouseResponse, nil
 }
 

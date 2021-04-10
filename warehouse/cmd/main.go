@@ -14,14 +14,17 @@ import (
 	"github.com/jmoiron/sqlx"
 
 	_binDeliveryHTTP "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/bin/delivery/http"
+	_commodityDeliveryHTTP "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/commodity/delivery/http"
 	_skuDeliveryHTTP "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/sku/delivery/http"
 	_warehouseDeliveryHTTP "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/warehouse/delivery/http"
 
 	_binRepository "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/bin/repository"
+	_commodityRepository "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/commodity/repository"
 	_skuRepository "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/sku/repository"
 	_warehouseRepository "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/warehouse/repository"
 
 	_binUsecase "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/bin/usecase"
+	_commodityUsecase "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/commodity/usecase"
 	_skuUsecase "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/sku/usecase"
 	_warehouseUsecase "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/warehouse/usecase"
 )
@@ -94,11 +97,13 @@ func main() {
 	warehouseRepository := _warehouseRepository.NewSQL(logrusInstance, dbInstance)
 	skuRepository := _skuRepository.NewSQL(logrusInstance, dbInstance)
 	binRepository := _binRepository.NewSQL(logrusInstance, dbInstance)
+	commodityRepository := _commodityRepository.NewSQL(logrusInstance, dbInstance)
 
 	// Build Usecases
-	warehouseUsecase := _warehouseUsecase.NewUsecase(logrusInstance, warehouseRepository)
+	warehouseUsecase := _warehouseUsecase.NewUsecase(logrusInstance, warehouseRepository, binRepository)
 	skuUsecase := _skuUsecase.NewUsecase(logrusInstance, skuRepository)
 	binUsecase := _binUsecase.NewUsecase(logrusInstance, binRepository, warehouseRepository)
+	commodityUsecase := _commodityUsecase.NewUsecase(logrusInstance, commodityRepository)
 
 	// Build Deliveries for HTTP
 	routerInstance = mux.NewRouter()
@@ -106,6 +111,7 @@ func main() {
 	_warehouseDeliveryHTTP.NewHTTPDelivery(routerInstance, logrusInstance, warehouseUsecase)
 	_skuDeliveryHTTP.NewHTTPDelivery(routerInstance, logrusInstance, skuUsecase)
 	_binDeliveryHTTP.NewHTTPDelivery(routerInstance, logrusInstance, binUsecase)
+	_commodityDeliveryHTTP.NewHTTPDelivery(routerInstance, logrusInstance, commodityUsecase)
 
 	// Small Health Check
 	routerInstance.HandleFunc("/sys/_health", func(w http.ResponseWriter, r *http.Request) {
