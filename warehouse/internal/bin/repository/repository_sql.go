@@ -50,6 +50,54 @@ func (wr *binRepository) Get(binID int64) (domain.Bin, error) {
 	return binData, nil
 }
 
+func (wr *binRepository) GetByWarehouseID(warehouseID int64) ([]domain.Bin, error) {
+	var (
+		binsData []domain.Bin
+	)
+
+	query, args, err := squirrel.Select(
+		"id",
+		"warehouse_id",
+		"name",
+		"latitude",
+		"longitude",
+		"created_at",
+		"updated_at",
+	).From("bins").Where(
+		squirrel.Eq{"warehouse_id": warehouseID},
+	).ToSql()
+
+	if err != nil {
+		return binsData, err
+	}
+
+	query = wr.sql.Rebind(query)
+	row, err := wr.sql.Query(query, args...)
+	if err != nil {
+		return binsData, err
+	}
+
+	for row.Next() {
+		var binData domain.Bin
+
+		if err := row.Scan(
+			&binData.ID,
+			&binData.WarehouseID,
+			&binData.Name,
+			&binData.Latitude,
+			&binData.Longitude,
+			&binData.CreatedAt,
+			&binData.UpdatedAt,
+		); err != nil {
+			return binsData, err
+		}
+
+		binsData = append(binsData, binData)
+	}
+
+	return binsData, nil
+}
+
 func (wr *binRepository) Select(params domain.BinQueryParameter) ([]domain.Bin, error) {
 	var (
 		binsData []domain.Bin
