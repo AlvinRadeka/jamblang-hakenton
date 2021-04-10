@@ -9,3 +9,7 @@ SQL:
   Username: 'jamblang'
   Password: 'bBU4SBPWsagX8C8tDT8v2Dp7'
   DBName: 'warehouse_db'
+Repository:
+  Barcode:
+    LambdaURL: "https://agfo64wl93.execute-api.us-east-1.amazonaws.com/v1/barcode-scanner"
+Usecase:

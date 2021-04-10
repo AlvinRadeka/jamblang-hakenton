@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/gojektech/heimdall/v6/httpclient"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
@@ -13,16 +15,21 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 
+	"github.com/alvinradeka/jamblang-hakenton/warehouse/internal/domain"
+
+	_barcodeDeliveryHTTP "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/barcode/delivery/http"
 	_binDeliveryHTTP "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/bin/delivery/http"
 	_commodityDeliveryHTTP "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/commodity/delivery/http"
 	_skuDeliveryHTTP "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/sku/delivery/http"
 	_warehouseDeliveryHTTP "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/warehouse/delivery/http"
 
+	_barcodeRepository "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/barcode/repository"
 	_binRepository "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/bin/repository"
 	_commodityRepository "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/commodity/repository"
 	_skuRepository "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/sku/repository"
 	_warehouseRepository "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/warehouse/repository"
 
+	_barcodeUsecase "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/barcode/usecase"
 	_binUsecase "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/bin/usecase"
 	_commodityUsecase "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/commodity/usecase"
 	_skuUsecase "github.com/alvinradeka/jamblang-hakenton/warehouse/internal/sku/usecase"
@@ -35,13 +42,16 @@ var (
 	logrusInstance *logrus.Logger
 	dbInstance     *sqlx.DB
 	routerInstance *mux.Router
+	httpClient     *httpclient.Client
 )
 
 type (
 	AppConfig struct {
-		Logger LoggerConfig
-		HTTP   HTTPConfig
-		SQL    SQLConfig
+		Logger     LoggerConfig
+		HTTP       HTTPConfig
+		SQL        SQLConfig
+		Repository RepositoryConfig
+		Usecase    UsecaseConfig
 	}
 
 	LoggerConfig struct {
@@ -59,6 +69,13 @@ type (
 		Username string
 		Password string
 		DBName   string
+	}
+
+	RepositoryConfig struct {
+		Barcode domain.BarcodeRepositoryConfig
+	}
+
+	UsecaseConfig struct {
 	}
 )
 
@@ -93,17 +110,24 @@ func main() {
 		logrusInstance.Fatalln(err)
 	}
 
+	// Create HTTP Client
+	httpClient = httpclient.NewClient(
+		httpclient.WithHTTPTimeout(30 * time.Second),
+	)
+
 	// Build Repositories
 	warehouseRepository := _warehouseRepository.NewSQL(logrusInstance, dbInstance)
 	skuRepository := _skuRepository.NewSQL(logrusInstance, dbInstance)
 	binRepository := _binRepository.NewSQL(logrusInstance, dbInstance)
 	commodityRepository := _commodityRepository.NewSQL(logrusInstance, dbInstance)
+	barcodeRepository := _barcodeRepository.New(logrusInstance, configData.Repository.Barcode, httpClient)
 
 	// Build Usecases
 	warehouseUsecase := _warehouseUsecase.NewUsecase(logrusInstance, warehouseRepository, binRepository)
 	skuUsecase := _skuUsecase.NewUsecase(logrusInstance, skuRepository)
 	binUsecase := _binUsecase.NewUsecase(logrusInstance, binRepository, warehouseRepository)
 	commodityUsecase := _commodityUsecase.NewUsecase(logrusInstance, commodityRepository)
+	barcodeUsecase := _barcodeUsecase.NewUsecase(logrusInstance, barcodeRepository, warehouseRepository, skuRepository)
 
 	// Build Deliveries for HTTP
 	routerInstance = mux.NewRouter()
@@ -112,6 +136,7 @@ func main() {
 	_skuDeliveryHTTP.NewHTTPDelivery(routerInstance, logrusInstance, skuUsecase)
 	_binDeliveryHTTP.NewHTTPDelivery(routerInstance, logrusInstance, binUsecase)
 	_commodityDeliveryHTTP.NewHTTPDelivery(routerInstance, logrusInstance, commodityUsecase)
+	_barcodeDeliveryHTTP.NewHTTPDelivery(routerInstance, logrusInstance, skuUsecase, warehouseUsecase, barcodeUsecase)
 
 	// Small Health Check
 	routerInstance.HandleFunc("/sys/_health", func(w http.ResponseWriter, r *http.Request) {
